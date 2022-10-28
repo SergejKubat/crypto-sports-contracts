@@ -1,24 +1,25 @@
-import { ethers } from "hardhat";
-
-const ONE_YEAR_IN_SECS = 365 * 24 * 60 * 60;
-const LOCKED_AMOUNT = "1";
+const { ethers } = require("hardhat");
 
 async function main() {
-    const currentTimestampInSeconds = Math.round(Date.now() / 1000);
+    const baseTokenURI = "https://www.google.com";
 
-    const unlockTime = currentTimestampInSeconds + ONE_YEAR_IN_SECS;
+    const SportEventFactory = await ethers.getContractFactory("SportEvent");
 
-    const lockedAmount = ethers.utils.parseEther(LOCKED_AMOUNT);
+    console.log("Deploying contract...");
 
-    // deploying contract...
-    const Lock = await ethers.getContractFactory("Lock");
-    const lock = await Lock.deploy(unlockTime, { value: lockedAmount });
+    const sportEvent = await SportEventFactory.deploy(baseTokenURI);
 
-    await lock.deployed();
+    await sportEvent.deployed();
 
-    console.log(
-        `Lock with ${LOCKED_AMOUNT} ETH and unlock timestamp ${unlockTime} deployed to ${lock.address}`
+    console.log(`Deployed contract to: ${sportEvent.address}`);
+
+    const [owner, otherAccount] = await ethers.getSigners();
+
+    const firstTokenId = await sportEvent.mint(
+        "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"
     );
+
+    console.log("ID of first token is: ", firstTokenId);
 }
 
 main()
