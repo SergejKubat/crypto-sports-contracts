@@ -1,46 +1,35 @@
 const { ethers } = require("hardhat");
-const { assert } = require("chai");
+const { expect } = require("chai");
 
-describe("SimpleStorage", function () {
-    let simpleStorageFactory;
-    let simpleStorage;
+describe("Sport Event Contract", () => {
+    const baseTokenURI = "https://www.google.com/";
+    const name = "SportEventName";
+    const symbol = "CryptoSports";
+    const ticketTypes = [0, 1, 2, 3];
 
-    beforeEach(async function () {
-        simpleStorageFactory = await ethers.getContractFactory("SimpleStorage");
-        simpleStorage = await simpleStorageFactory.deploy();
-    });
+    let sportEventFactory, sportEvent, owner, account1, account2;
 
-    it("Should start with a favorite number of 0", async function () {
-        const currentValue = await simpleStorage.retrieve();
-        const expectedValue = "0";
+    beforeEach(async () => {
+        sportEventFactory = await ethers.getContractFactory("SportEvent");
 
-        assert.equal(currentValue.toString(), expectedValue);
-    });
-
-    it("Should update when we call store", async function () {
-        const expectedValue = "7";
-        const transactionResponse = await simpleStorage.store(expectedValue);
-
-        await transactionResponse.wait(1);
-
-        const currentValue = await simpleStorage.retrieve();
-        assert.equal(currentValue.toString(), expectedValue);
-    });
-
-    it("Should work correctly with the people struct and array", async function () {
-        const expectedPersonName = "Sergej";
-        const expectedFavoriteNumber = "7";
-
-        const transactionResponse = await simpleStorage.addPerson(
-            expectedPersonName,
-            expectedFavoriteNumber
+        sportEvent = await sportEventFactory.deploy(
+            baseTokenURI,
+            name,
+            symbol,
+            ticketTypes
         );
 
-        await transactionResponse.wait(1);
+        [owner, account1, account2, _] = await ethers.getSigners();
+    });
 
-        const { favoriteNumber, name } = await simpleStorage.people(0);
+    describe("Deployment", () => {
+        it("Should set the right owner", async () => {
+            expect(await sportEvent.signer.address).to.equal(owner.address);
+        });
 
-        assert.equal(name, expectedPersonName);
-        assert.equal(favoriteNumber, expectedFavoriteNumber);
+        it("Should set the right name and symbol", async () => {
+            expect(await sportEvent.name()).to.equal(name);
+            expect(await sportEvent.symbol()).to.equal(symbol);
+        });
     });
 });

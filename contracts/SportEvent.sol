@@ -1,21 +1,23 @@
 // SPDX-License-Identifier: MIT
+
 pragma solidity ^0.8.9;
 
 // Uncomment this line to use console.log
 // import "hardhat/console.sol";
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/utils/Counters.sol";
+import "./extensions/ERC721A.sol";
+import "./extensions/ERC721APausable.sol";
+import "./extensions/ERC721ABurnable.sol";
 
-contract SportEvent is ERC721 {
-    using Counters for Counters.Counter;
-    Counters.Counter private _tokenIds;
-
+contract SportEvent is ERC721A, ERC721APausable, ERC721ABurnable {
     string private _baseTokenURI;
 
-    constructor(string memory baseTokenURI)
-        ERC721("SportEventName", "CryptoSports")
-    {
+    constructor(
+        string memory baseTokenURI,
+        string memory name,
+        string memory symbol,
+        uint256[] memory ticketTypes
+    ) ERC721A(name, symbol, ticketTypes) {
         _baseTokenURI = baseTokenURI;
     }
 
@@ -23,13 +25,31 @@ contract SportEvent is ERC721 {
         return _baseTokenURI;
     }
 
-    function mint(address buyer) public returns (uint256) {
-        _tokenIds.increment();
+    function pause() public virtual onlyOwner {
+        _pause();
+    }
 
-        uint256 newItemId = _tokenIds.current();
+    function unpause() public virtual onlyOwner {
+        _unpause();
+    }
 
-        _mint(buyer, newItemId);
+    function mint(address to, uint256[] memory ticketTypes)
+        external
+        onlyOwner
+        returns (uint256 startId)
+    {
+        require(to != address(0), "ERC721: mint to the zero address");
+        startId = _nextTokenId();
+        _mint(to, ticketTypes);
+    }
 
-        return newItemId;
+    function _beforeTokenTransfers(
+        address from,
+        address to,
+        uint256 startTokenId,
+        uint256 quantity
+    ) internal virtual override(ERC721A, ERC721APausable) {
+        super._beforeTokenTransfers(from, to, startTokenId, quantity);
+        require(!paused(), "ERC721Pausable: token transfer while paused");
     }
 }
