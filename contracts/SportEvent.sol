@@ -10,7 +10,13 @@ import "./extensions/ERC721APausable.sol";
 import "./extensions/ERC721ABurnable.sol";
 
 contract SportEvent is ERC721A, ERC721APausable, ERC721ABurnable {
+    // STATE VARIABLES
+
     string private _baseTokenURI;
+
+    // FUNCTIONS
+
+    // constructor
 
     constructor(
         string memory baseTokenURI,
@@ -21,17 +27,7 @@ contract SportEvent is ERC721A, ERC721APausable, ERC721ABurnable {
         _baseTokenURI = baseTokenURI;
     }
 
-    function _baseURI() internal view virtual override returns (string memory) {
-        return _baseTokenURI;
-    }
-
-    function pause() public virtual onlyOwner {
-        _pause();
-    }
-
-    function unpause() public virtual onlyOwner {
-        _unpause();
-    }
+    // external
 
     function mint(address to, uint256[] memory ticketTypes)
         external
@@ -43,6 +39,22 @@ contract SportEvent is ERC721A, ERC721APausable, ERC721ABurnable {
         startId = _nextTokenId();
 
         _mint(to, ticketTypes);
+    }
+
+    // public
+
+    function pause() public virtual onlyOwner {
+        _pause();
+    }
+
+    function unpause() public virtual onlyOwner {
+        _unpause();
+    }
+
+    // internal
+
+    function _baseURI() internal view virtual override returns (string memory) {
+        return _baseTokenURI;
     }
 
     function _beforeTokenTransfers(
