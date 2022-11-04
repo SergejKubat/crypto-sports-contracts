@@ -39,7 +39,9 @@ contract SportEvent is ERC721A, ERC721APausable, ERC721ABurnable {
         returns (uint256 startId)
     {
         require(to != address(0), "ERC721: mint to the zero address");
+
         startId = _nextTokenId();
+
         _mint(to, ticketTypes);
     }
 
