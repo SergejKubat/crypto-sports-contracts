@@ -4,9 +4,10 @@ pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
 
+import "./interfaces/ISportEventFactory.sol";
 import "./SportEvent.sol";
 
-contract SportEventFactory is AccessControl {
+contract SportEventFactory is ISportEventFactory, AccessControl {
     // STATE VARIABLES
 
     bytes32 public constant SPORT_EVENT_CREATOR_ROLE =

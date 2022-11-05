@@ -5,16 +5,20 @@ pragma solidity ^0.8.9;
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
+import "./interfaces/ISportEventFactory.sol";
+import "./interfaces/ISportEvent.sol";
+
 contract SportEventRegistry is AccessControl, ReentrancyGuard {
     // TYPE DECLARATIONS
 
     struct SportEventStruct {
         address sportEventAddress;
         address creator;
+        address organizer;
         string baseURI;
         string name;
         string symbol;
-        uint256 endTimestamp;
+        uint32 endTimestamp;
         bool active;
     }
 
@@ -26,10 +30,11 @@ contract SportEventRegistry is AccessControl, ReentrancyGuard {
     // SportEventFactory contract address
     address public immutable factory;
 
-    // array of all created sport events addresses
-    address[] private _events;
+    // track count of events
+    uint256 public eventsCount = 0;
 
-    //mapping(address => SportEventStruct) private getEvent;
+    // map sport events addresses to sport events details
+    mapping(address => SportEventStruct) private _events;
 
     // map sport events to ticket amounts per ticket type (0, 1, 2, 3)
     mapping(address => mapping(uint256 => uint256)) private _amounts;
@@ -40,8 +45,8 @@ contract SportEventRegistry is AccessControl, ReentrancyGuard {
     // map accounts to ticket purchases per sport events
     mapping(address => mapping(address => uint256)) private _purchases;
 
-    // map accounts to earnings from sport events
-    mapping(address => mapping(address => uint256)) private _earnings;
+    // map accounts to balances from sport events
+    mapping(address => mapping(address => uint256)) private _balances;
 
     // EVENTS
 
@@ -133,14 +138,22 @@ contract SportEventRegistry is AccessControl, ReentrancyGuard {
         return _getPrices(sportEventAddress, ticketTypes);
     }
 
-    // withdraw from specific sport event
+    function getBalance(address sportEventAddress)
+        external
+        view
+        returns (uint256)
+    {
+        return _balances[msg.sender][sportEventAddress];
+    }
+
+    // withdraw funds from specific sport event
     function withdraw(address sportEventAddress, uint256 amount)
         external
         nonReentrant
     {
         require(amount > 0, "Invalid amount.");
         require(
-            _earnings[msg.sender][sportEventAddress] >= amount,
+            _balances[msg.sender][sportEventAddress] >= amount,
             "The amount is greater than earning."
         );
 
@@ -148,11 +161,185 @@ contract SportEventRegistry is AccessControl, ReentrancyGuard {
         payable(msg.sender).transfer(amount);
 
         // update earnings
-        _earnings[msg.sender][sportEventAddress] =
-            _earnings[msg.sender][sportEventAddress] -
+        _balances[msg.sender][sportEventAddress] =
+            _balances[msg.sender][sportEventAddress] -
             amount;
 
         emit EarningsWithdrew(sportEventAddress, msg.sender, amount);
+    }
+
+    // create new sport event
+    function createSportEvent(
+        string memory baseURI,
+        string memory name,
+        string memory symbol,
+        uint256[] memory amounts,
+        uint256[] memory prices,
+        address organizerAddress,
+        uint32 endTimestamp
+    ) external {
+        require(
+            hasRole(SPORT_EVENT_CREATOR_ROLE, msg.sender),
+            "Caller isn't authorized to create new event."
+        );
+        require(
+            amounts.length == prices.length,
+            "Prices and amounts must be same size"
+        );
+
+        // determine supported ticket types
+        uint256[] memory ticketTypes = new uint256[](amounts.length);
+
+        for (uint256 i = 0; i < amounts.length; i++) {
+            ticketTypes[i] = i;
+        }
+
+        // deploy and get new sport event address
+        address sportEventAddress = ISportEventFactory(factory).createEvent(
+            baseURI,
+            name,
+            symbol,
+            ticketTypes,
+            eventsCount
+        );
+
+        // update events counter
+        eventsCount = eventsCount + 1;
+
+        // update amounts and prices
+        for (uint256 i = 0; i < amounts.length; i++) {
+            _amounts[sportEventAddress][i] = amounts[i];
+            _prices[sportEventAddress][i] = prices[i];
+        }
+
+        // add new sport event to map
+        _events[sportEventAddress] = SportEventStruct(
+            sportEventAddress,
+            msg.sender,
+            organizerAddress,
+            baseURI,
+            name,
+            symbol,
+            endTimestamp,
+            true
+        );
+
+        emit SportEventCreated(
+            sportEventAddress,
+            msg.sender,
+            baseURI,
+            name,
+            endTimestamp
+        );
+    }
+
+    function pauseEvent(address sportEventAddress) external {
+        require(
+            hasRole(SPORT_EVENT_CREATOR_ROLE, msg.sender),
+            "Caller isn't authorized to pause an event."
+        );
+        require(sportEventAddress != address(0), "Invalid event address.");
+        require(
+            _events[sportEventAddress].active != false,
+            "Event is already paused."
+        );
+
+        // update sport event flag
+        _events[sportEventAddress].active = false;
+
+        // pause sport event
+        ISportEvent(sportEventAddress).pause();
+
+        emit SportEventPaused(sportEventAddress);
+    }
+
+    function unpauseEvent(address sportEventAddress) external {
+        require(
+            hasRole(SPORT_EVENT_CREATOR_ROLE, msg.sender),
+            "Caller isn't authorized to pause an event."
+        );
+        require(sportEventAddress != address(0), "Invalid event address.");
+        require(
+            _events[sportEventAddress].active != true,
+            "Event is already active."
+        );
+
+        // update sport event flag
+        _events[sportEventAddress].active = true;
+
+        // pause sport event
+        ISportEvent(sportEventAddress).unpause();
+
+        emit SportEventUnpaused(sportEventAddress);
+    }
+
+    function buyTickets(address sportEventAddress, uint256[] memory ticketTypes)
+        external
+        payable
+        nonReentrant
+    {
+        require(sportEventAddress != address(0), "Invalid event address.");
+        require(ticketTypes.length > 0, "Ticket types cannot be 0.");
+        require(
+            _events[sportEventAddress].endTimestamp > block.timestamp,
+            "The event has passed."
+        );
+
+        uint256 totalPrice = 0;
+
+        // calculate total price
+        for (uint256 i = 0; i < ticketTypes.length; i++) {
+            // check if there is enought amount of tickets
+            require(
+                _amounts[sportEventAddress][ticketTypes[i]] > 0,
+                "Not enough tickets."
+            );
+            // add specific ticket type price to total price
+            totalPrice =
+                totalPrice +
+                _prices[sportEventAddress][ticketTypes[i]];
+            // decrement amount of specific ticket type
+            _amounts[sportEventAddress][ticketTypes[i]] =
+                _amounts[sportEventAddress][ticketTypes[i]] -
+                1;
+        }
+
+        // check payment
+        require(msg.value >= totalPrice, "Incorrect payment.");
+
+        // mint tickets
+        uint256 startId = ISportEvent(sportEventAddress).mint(
+            msg.sender,
+            ticketTypes
+        );
+
+        // if exceed amount return change
+        if (msg.value > totalPrice) {
+            payable(msg.sender).transfer(msg.value - totalPrice);
+        }
+
+        // update organizer balances
+        address organizerAddress = _events[sportEventAddress].organizer;
+
+        uint256 organizerShare = (totalPrice * 9) / 10;
+
+        _balances[organizerAddress][sportEventAddress] = _balances[
+            organizerAddress
+        ][sportEventAddress] += organizerShare;
+
+        // update admin balances
+        uint256 adminShare = totalPrice - organizerShare;
+
+        _balances[address(this)][sportEventAddress] =
+            _balances[address(this)][sportEventAddress] +
+            adminShare;
+
+        // update purchases
+        _purchases[msg.sender][sportEventAddress] =
+            _purchases[msg.sender][sportEventAddress] +
+            ticketTypes.length;
+
+        emit TicketsSold(sportEventAddress, msg.sender, ticketTypes, startId);
     }
 
     // internal

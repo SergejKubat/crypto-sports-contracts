@@ -9,7 +9,9 @@ import "./extensions/ERC721A.sol";
 import "./extensions/ERC721APausable.sol";
 import "./extensions/ERC721ABurnable.sol";
 
-contract SportEvent is ERC721A, ERC721APausable, ERC721ABurnable {
+import "./interfaces/ISportEvent.sol";
+
+contract SportEvent is ISportEvent, ERC721A, ERC721APausable, ERC721ABurnable {
     // STATE VARIABLES
 
     string private _baseTokenURI;
