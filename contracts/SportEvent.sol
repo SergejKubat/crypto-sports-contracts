@@ -2,9 +2,6 @@
 
 pragma solidity ^0.8.9;
 
-// Uncomment this line to use console.log
-// import "hardhat/console.sol";
-
 import "./extensions/ERC721A.sol";
 import "./extensions/ERC721APausable.sol";
 import "./extensions/ERC721ABurnable.sol";
@@ -24,9 +21,12 @@ contract SportEvent is ISportEvent, ERC721A, ERC721APausable, ERC721ABurnable {
         string memory baseTokenURI,
         string memory name,
         string memory symbol,
-        uint256[] memory ticketTypes
+        uint256[] memory ticketTypes,
+        address registry
     ) ERC721A(name, symbol, ticketTypes) {
         _baseTokenURI = baseTokenURI;
+
+        transferOwnership(registry);
     }
 
     // external

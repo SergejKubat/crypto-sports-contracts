@@ -8,6 +8,8 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "./interfaces/ISportEventFactory.sol";
 import "./interfaces/ISportEvent.sol";
 
+// import "hardhat/console.sol";
+
 contract SportEventRegistry is AccessControl, ReentrancyGuard {
     // TYPE DECLARATIONS
 
@@ -24,14 +26,16 @@ contract SportEventRegistry is AccessControl, ReentrancyGuard {
 
     // STATE VARIABLES
 
+    address private _owner;
+
+    // track count of events
+    uint256 private _eventsCount = 0;
+
     bytes32 public constant SPORT_EVENT_CREATOR_ROLE =
         keccak256("SPORT_EVENT_CREATOR_ROLE");
 
     // SportEventFactory contract address
     address public immutable factory;
-
-    // track count of events
-    uint256 public eventsCount = 0;
 
     // map sport events addresses to sport events details
     mapping(address => SportEventStruct) private _events;
@@ -85,6 +89,7 @@ contract SportEventRegistry is AccessControl, ReentrancyGuard {
     // constructor
 
     constructor(address _factory) {
+        _owner = msg.sender;
         factory = _factory;
 
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
@@ -93,7 +98,7 @@ contract SportEventRegistry is AccessControl, ReentrancyGuard {
 
     // external
 
-    // get number of purchased tickets for specific account
+    // get number of purchased tickets for specific account and sport event
     function getPurchases(address walletAddress, address sportEventAdress)
         external
         view
@@ -200,11 +205,11 @@ contract SportEventRegistry is AccessControl, ReentrancyGuard {
             name,
             symbol,
             ticketTypes,
-            eventsCount
+            _eventsCount
         );
 
         // update events counter
-        eventsCount = eventsCount + 1;
+        _eventsCount = _eventsCount + 1;
 
         // update amounts and prices
         for (uint256 i = 0; i < amounts.length; i++) {
@@ -233,6 +238,7 @@ contract SportEventRegistry is AccessControl, ReentrancyGuard {
         );
     }
 
+    // pause sport event 
     function pauseEvent(address sportEventAddress) external {
         require(
             hasRole(SPORT_EVENT_CREATOR_ROLE, msg.sender),
@@ -253,6 +259,7 @@ contract SportEventRegistry is AccessControl, ReentrancyGuard {
         emit SportEventPaused(sportEventAddress);
     }
 
+    // unpause sport event
     function unpauseEvent(address sportEventAddress) external {
         require(
             hasRole(SPORT_EVENT_CREATOR_ROLE, msg.sender),
@@ -273,6 +280,7 @@ contract SportEventRegistry is AccessControl, ReentrancyGuard {
         emit SportEventUnpaused(sportEventAddress);
     }
 
+    // buy tickets for the provided sport event
     function buyTickets(address sportEventAddress, uint256[] memory ticketTypes)
         external
         payable
@@ -330,8 +338,8 @@ contract SportEventRegistry is AccessControl, ReentrancyGuard {
         // update admin balances
         uint256 adminShare = totalPrice - organizerShare;
 
-        _balances[address(this)][sportEventAddress] =
-            _balances[address(this)][sportEventAddress] +
+        _balances[_owner][sportEventAddress] =
+            _balances[_owner][sportEventAddress] +
             adminShare;
 
         // update purchases

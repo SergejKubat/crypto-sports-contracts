@@ -30,7 +30,7 @@ contract SportEventFactory is ISportEventFactory, AccessControl {
         string memory symbol,
         uint256[] memory ticketTypes,
         uint256 index
-    ) external returns (address eventAddress) {
+    ) external override returns (address eventAddress) {
         require(
             hasRole(SPORT_EVENT_CREATOR_ROLE, msg.sender),
             "Caller isn't authorized to create new event."
