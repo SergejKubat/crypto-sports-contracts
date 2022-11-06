@@ -1,31 +1,59 @@
 const { ethers } = require("hardhat");
 
 async function main() {
-    const baseTokenURI = "https://www.google.com/";
-    const name = "SportEventName";
-    const symbol = "CryptoSports";
-    const ticketTypes = [0, 1, 2, 3];
-
     const [owner] = await ethers.getSigners();
     const ownerBalance = await owner.getBalance();
 
+    console.log("####################################################\n");
     console.log(`Owner account address: ${owner.address}`);
-    console.log(`Owner balance: ${ownerBalance.toString()} ETH`);
+    console.log(`Owner balance: ${ownerBalance.toString()} ETH\n`);
 
-    const SportEventFactory = await ethers.getContractFactory("SportEvent");
-
-    console.log("Deploying contract...");
-
-    const sportEvent = await SportEventFactory.deploy(
-        baseTokenURI,
-        name,
-        symbol,
-        ticketTypes
+    const SportEventFactory = await ethers.getContractFactory(
+        "SportEventFactory"
     );
 
-    await sportEvent.deployed();
+    console.log("Deploying SportEventFactory contract...");
 
-    console.log(`Deployed contract to: ${sportEvent.address}`);
+    const sportEventFactory = await SportEventFactory.deploy();
+
+    await sportEventFactory.deployed();
+
+    const sportEventFactoryAddress = sportEventFactory.address;
+
+    console.log(
+        `SportEventFactory contract deployed to: ${sportEventFactoryAddress}\n`
+    );
+
+    console.log("####################################################\n");
+
+    const SportEventRegistry = await ethers.getContractFactory(
+        "SportEventRegistry"
+    );
+
+    console.log("Deploying SportEventRegistry contract...");
+
+    const sportEventRegistry = await SportEventRegistry.deploy(
+        sportEventFactoryAddress
+    );
+
+    await sportEventRegistry.deployed();
+
+    const sportEventRegistryAddress = sportEventRegistry.address;
+
+    console.log(
+        `SportEventRegistry contract deployed to: ${sportEventRegistryAddress}\n`
+    );
+
+    // grant role for registry
+    const SPORT_EVENT_CREATOR_ROLE =
+        await sportEventFactory.SPORT_EVENT_CREATOR_ROLE();
+
+    await sportEventFactory.grantRole(
+        SPORT_EVENT_CREATOR_ROLE,
+        sportEventFactoryAddress
+    );
+
+    console.log("Role granted!");
 }
 
 main()
