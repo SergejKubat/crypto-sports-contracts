@@ -31,8 +31,7 @@ contract SportEventRegistry is AccessControl, ReentrancyGuard {
     // track count of events
     uint256 private _eventsCount = 0;
 
-    bytes32 public constant SPORT_EVENT_CREATOR_ROLE =
-        keccak256("SPORT_EVENT_CREATOR_ROLE");
+    bytes32 public constant SPORT_EVENT_CREATOR_ROLE = keccak256("SPORT_EVENT_CREATOR_ROLE");
 
     // SportEventFactory contract address
     address public immutable factory;
@@ -70,19 +69,10 @@ contract SportEventRegistry is AccessControl, ReentrancyGuard {
     event SportEventUnpaused(address eventAddress);
 
     // emits when ticket is sold
-    event TicketsSold(
-        address sportEventAddress,
-        address to,
-        uint256[] ticketTypes,
-        uint256 startId
-    );
+    event TicketsSold(address sportEventAddress, address to, uint256[] ticketTypes, uint256 startId);
 
     // emits when earnings are withdrew
-    event EarningsWithdrew(
-        address sportEventAddress,
-        address to,
-        uint256 amount
-    );
+    event EarningsWithdrew(address sportEventAddress, address to, uint256 amount);
 
     // FUNCTIONS
 
@@ -99,20 +89,12 @@ contract SportEventRegistry is AccessControl, ReentrancyGuard {
     // external
 
     // get number of purchased tickets for specific account and sport event
-    function getPurchases(address walletAddress, address sportEventAdress)
-        external
-        view
-        returns (uint256)
-    {
+    function getPurchases(address walletAddress, address sportEventAdress) external view returns (uint256) {
         return _purchases[walletAddress][sportEventAdress];
     }
 
     // get amount of available tickets for specific ticket type
-    function getAmount(address sportEventAddress, uint256 ticketType)
-        external
-        view
-        returns (uint256)
-    {
+    function getAmount(address sportEventAddress, uint256 ticketType) external view returns (uint256) {
         return _amounts[sportEventAddress][ticketType];
     }
 
@@ -126,11 +108,7 @@ contract SportEventRegistry is AccessControl, ReentrancyGuard {
     }
 
     // get price of available tickets for specific ticket type
-    function getPrice(address sportEventAddress, uint256 ticketType)
-        external
-        view
-        returns (uint256)
-    {
+    function getPrice(address sportEventAddress, uint256 ticketType) external view returns (uint256) {
         return _prices[sportEventAddress][ticketType];
     }
 
@@ -143,32 +121,20 @@ contract SportEventRegistry is AccessControl, ReentrancyGuard {
         return _getPrices(sportEventAddress, ticketTypes);
     }
 
-    function getBalance(address sportEventAddress)
-        external
-        view
-        returns (uint256)
-    {
+    function getBalance(address sportEventAddress) external view returns (uint256) {
         return _balances[msg.sender][sportEventAddress];
     }
 
     // withdraw funds from specific sport event
-    function withdraw(address sportEventAddress, uint256 amount)
-        external
-        nonReentrant
-    {
+    function withdraw(address sportEventAddress, uint256 amount) external nonReentrant {
         require(amount > 0, "Invalid amount.");
-        require(
-            _balances[msg.sender][sportEventAddress] >= amount,
-            "The amount is greater than earning."
-        );
+        require(_balances[msg.sender][sportEventAddress] >= amount, "The amount is greater than earning.");
 
         // send specified amount
         payable(msg.sender).transfer(amount);
 
         // update earnings
-        _balances[msg.sender][sportEventAddress] =
-            _balances[msg.sender][sportEventAddress] -
-            amount;
+        _balances[msg.sender][sportEventAddress] = _balances[msg.sender][sportEventAddress] - amount;
 
         emit EarningsWithdrew(sportEventAddress, msg.sender, amount);
     }
@@ -183,14 +149,8 @@ contract SportEventRegistry is AccessControl, ReentrancyGuard {
         address organizerAddress,
         uint32 endTimestamp
     ) external {
-        require(
-            hasRole(SPORT_EVENT_CREATOR_ROLE, msg.sender),
-            "Caller isn't authorized to create new event."
-        );
-        require(
-            amounts.length == prices.length,
-            "Prices and amounts must be same size"
-        );
+        require(hasRole(SPORT_EVENT_CREATOR_ROLE, msg.sender), "Caller isn't authorized to create new event.");
+        require(amounts.length == prices.length, "Prices and amounts must be same size.");
 
         // determine supported ticket types
         uint256[] memory ticketTypes = new uint256[](amounts.length);
@@ -229,26 +189,14 @@ contract SportEventRegistry is AccessControl, ReentrancyGuard {
             true
         );
 
-        emit SportEventCreated(
-            sportEventAddress,
-            msg.sender,
-            baseURI,
-            name,
-            endTimestamp
-        );
+        emit SportEventCreated(sportEventAddress, msg.sender, baseURI, name, endTimestamp);
     }
 
-    // pause sport event 
+    // pause sport event
     function pauseEvent(address sportEventAddress) external {
-        require(
-            hasRole(SPORT_EVENT_CREATOR_ROLE, msg.sender),
-            "Caller isn't authorized to pause an event."
-        );
-        require(sportEventAddress != address(0), "Invalid event address.");
-        require(
-            _events[sportEventAddress].active != false,
-            "Event is already paused."
-        );
+        require(hasRole(SPORT_EVENT_CREATOR_ROLE, msg.sender), "Caller isn't authorized to pause an event.");
+        require(_events[sportEventAddress].sportEventAddress != address(0), "Event doesn't exist.");
+        require(_events[sportEventAddress].active != false, "Event is already paused.");
 
         // update sport event flag
         _events[sportEventAddress].active = false;
@@ -261,15 +209,9 @@ contract SportEventRegistry is AccessControl, ReentrancyGuard {
 
     // unpause sport event
     function unpauseEvent(address sportEventAddress) external {
-        require(
-            hasRole(SPORT_EVENT_CREATOR_ROLE, msg.sender),
-            "Caller isn't authorized to pause an event."
-        );
-        require(sportEventAddress != address(0), "Invalid event address.");
-        require(
-            _events[sportEventAddress].active != true,
-            "Event is already active."
-        );
+        require(hasRole(SPORT_EVENT_CREATOR_ROLE, msg.sender), "Caller isn't authorized to pause an event.");
+        require(_events[sportEventAddress].sportEventAddress != address(0), "Event doesn't exist.");
+        require(_events[sportEventAddress].active != true, "Event is already active.");
 
         // update sport event flag
         _events[sportEventAddress].active = true;
@@ -281,45 +223,28 @@ contract SportEventRegistry is AccessControl, ReentrancyGuard {
     }
 
     // buy tickets for the provided sport event
-    function buyTickets(address sportEventAddress, uint256[] memory ticketTypes)
-        external
-        payable
-        nonReentrant
-    {
-        require(sportEventAddress != address(0), "Invalid event address.");
+    function buyTickets(address sportEventAddress, uint256[] memory ticketTypes) external payable nonReentrant {
+        require(_events[sportEventAddress].sportEventAddress != address(0), "Event doesn't exist.");
         require(ticketTypes.length > 0, "Ticket types cannot be 0.");
-        require(
-            _events[sportEventAddress].endTimestamp > block.timestamp,
-            "The event has passed."
-        );
+        require(_events[sportEventAddress].endTimestamp > block.timestamp, "The event has passed.");
 
         uint256 totalPrice = 0;
 
         // calculate total price
         for (uint256 i = 0; i < ticketTypes.length; i++) {
             // check if there is enought amount of tickets
-            require(
-                _amounts[sportEventAddress][ticketTypes[i]] > 0,
-                "Not enough tickets."
-            );
+            require(_amounts[sportEventAddress][ticketTypes[i]] > 0, "Not enough tickets.");
             // add specific ticket type price to total price
-            totalPrice =
-                totalPrice +
-                _prices[sportEventAddress][ticketTypes[i]];
+            totalPrice = totalPrice + _prices[sportEventAddress][ticketTypes[i]];
             // decrement amount of specific ticket type
-            _amounts[sportEventAddress][ticketTypes[i]] =
-                _amounts[sportEventAddress][ticketTypes[i]] -
-                1;
+            _amounts[sportEventAddress][ticketTypes[i]] = _amounts[sportEventAddress][ticketTypes[i]] - 1;
         }
 
         // check payment
-        require(msg.value >= totalPrice, "Incorrect payment.");
+        require(msg.value >= totalPrice, "Insufficient funds.");
 
         // mint tickets
-        uint256 startId = ISportEvent(sportEventAddress).mint(
-            msg.sender,
-            ticketTypes
-        );
+        uint256 startId = ISportEvent(sportEventAddress).mint(msg.sender, ticketTypes);
 
         // if exceed amount return change
         if (msg.value > totalPrice) {
@@ -331,21 +256,17 @@ contract SportEventRegistry is AccessControl, ReentrancyGuard {
 
         uint256 organizerShare = (totalPrice * 9) / 10;
 
-        _balances[organizerAddress][sportEventAddress] = _balances[
-            organizerAddress
-        ][sportEventAddress] += organizerShare;
+        _balances[organizerAddress][sportEventAddress] = _balances[organizerAddress][
+            sportEventAddress
+        ] += organizerShare;
 
         // update admin balances
         uint256 adminShare = totalPrice - organizerShare;
 
-        _balances[_owner][sportEventAddress] =
-            _balances[_owner][sportEventAddress] +
-            adminShare;
+        _balances[_owner][sportEventAddress] = _balances[_owner][sportEventAddress] + adminShare;
 
         // update purchases
-        _purchases[msg.sender][sportEventAddress] =
-            _purchases[msg.sender][sportEventAddress] +
-            ticketTypes.length;
+        _purchases[msg.sender][sportEventAddress] = _purchases[msg.sender][sportEventAddress] + ticketTypes.length;
 
         emit TicketsSold(sportEventAddress, msg.sender, ticketTypes, startId);
     }
@@ -353,10 +274,11 @@ contract SportEventRegistry is AccessControl, ReentrancyGuard {
     // internal
 
     // get all amounts of available tickets fot all ticket types
-    function _getAmounts(
-        address sportEventAddress,
-        uint256[] memory ticketTypes
-    ) internal view returns (uint256[] memory) {
+    function _getAmounts(address sportEventAddress, uint256[] memory ticketTypes)
+        internal
+        view
+        returns (uint256[] memory)
+    {
         uint256[] memory amounts = new uint256[](ticketTypes.length);
 
         for (uint256 i = 0; i < ticketTypes.length; i++) {

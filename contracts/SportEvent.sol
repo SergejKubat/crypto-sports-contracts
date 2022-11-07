@@ -31,11 +31,7 @@ contract SportEvent is ISportEvent, ERC721A, ERC721APausable, ERC721ABurnable {
 
     // external
 
-    function mint(address to, uint256[] memory ticketTypes)
-        external
-        onlyOwner
-        returns (uint256 startId)
-    {
+    function mint(address to, uint256[] memory ticketTypes) external onlyOwner returns (uint256 startId) {
         require(to != address(0), "ERC721: mint to the zero address");
 
         startId = _nextTokenId();

@@ -8,9 +8,8 @@ async function main() {
     console.log(`Owner account address: ${owner.address}`);
     console.log(`Owner balance: ${ownerBalance.toString()} ETH\n`);
 
-    const SportEventFactory = await ethers.getContractFactory(
-        "SportEventFactory"
-    );
+    // deploying factory
+    const SportEventFactory = await ethers.getContractFactory("SportEventFactory");
 
     console.log("Deploying SportEventFactory contract...");
 
@@ -20,38 +19,27 @@ async function main() {
 
     const sportEventFactoryAddress = sportEventFactory.address;
 
-    console.log(
-        `SportEventFactory contract deployed to: ${sportEventFactoryAddress}\n`
-    );
+    console.log(`SportEventFactory contract deployed to: ${sportEventFactoryAddress}\n`);
 
     console.log("####################################################\n");
 
-    const SportEventRegistry = await ethers.getContractFactory(
-        "SportEventRegistry"
-    );
+    // deploying registry
+    const SportEventRegistry = await ethers.getContractFactory("SportEventRegistry");
 
     console.log("Deploying SportEventRegistry contract...");
 
-    const sportEventRegistry = await SportEventRegistry.deploy(
-        sportEventFactoryAddress
-    );
+    const sportEventRegistry = await SportEventRegistry.deploy(sportEventFactoryAddress);
 
     await sportEventRegistry.deployed();
 
     const sportEventRegistryAddress = sportEventRegistry.address;
 
-    console.log(
-        `SportEventRegistry contract deployed to: ${sportEventRegistryAddress}\n`
-    );
+    console.log(`SportEventRegistry contract deployed to: ${sportEventRegistryAddress}\n`);
 
     // grant role for registry
-    const SPORT_EVENT_CREATOR_ROLE =
-        await sportEventFactory.SPORT_EVENT_CREATOR_ROLE();
+    const SPORT_EVENT_CREATOR_ROLE = await sportEventFactory.SPORT_EVENT_CREATOR_ROLE();
 
-    await sportEventFactory.grantRole(
-        SPORT_EVENT_CREATOR_ROLE,
-        sportEventFactoryAddress
-    );
+    await sportEventFactory.grantRole(SPORT_EVENT_CREATOR_ROLE, sportEventFactoryAddress);
 
     console.log("Role granted!");
 }
