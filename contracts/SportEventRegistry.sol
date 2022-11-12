@@ -126,15 +126,16 @@ contract SportEventRegistry is AccessControl, ReentrancyGuard {
     }
 
     // withdraw funds from specific sport event
-    function withdraw(address sportEventAddress, uint256 amount) external nonReentrant {
-        require(amount > 0, "Invalid amount.");
-        require(_balances[msg.sender][sportEventAddress] >= amount, "The amount is greater than earning.");
+    function withdraw(address sportEventAddress) external nonReentrant {
+        require(_balances[msg.sender][sportEventAddress] > 0, "There is no funds.");
 
-        // send specified amount
+        uint256 amount = _balances[msg.sender][sportEventAddress];
+
+        // reset balance
+        _balances[msg.sender][sportEventAddress] = 0;
+
+        // send funds
         payable(msg.sender).transfer(amount);
-
-        // update earnings
-        _balances[msg.sender][sportEventAddress] = _balances[msg.sender][sportEventAddress] - amount;
 
         emit EarningsWithdrew(sportEventAddress, msg.sender, amount);
     }

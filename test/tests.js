@@ -2,7 +2,6 @@ const { ethers } = require("hardhat");
 const { expect } = require("chai");
 
 const { anyValue } = require("@nomicfoundation/hardhat-chai-matchers/withArgs");
-const { time } = require("@nomicfoundation/hardhat-network-helpers");
 
 describe("Setup contracts", () => {
     let SportEventFactory,
@@ -12,8 +11,7 @@ describe("Setup contracts", () => {
         superAdmin,
         admin,
         organizer,
-        user1,
-        user2;
+        user1;
 
     beforeEach(async () => {
         // deploying factory
@@ -35,7 +33,7 @@ describe("Setup contracts", () => {
 
         await sportEventFactory.grantRole(SPORT_EVENT_CREATOR_ROLE, sportEventRegistry.address);
 
-        [superAdmin, admin, organizer, user1, user2, _] = await ethers.getSigners();
+        [superAdmin, admin, organizer, user1, _] = await ethers.getSigners();
     });
 
     describe("Factory contract", () => {
@@ -334,7 +332,24 @@ describe("Setup contracts", () => {
                         );
                     });
 
-                    /* @TODO: Add tests for 'withdraw' function */
+                    describe("Withdraw funds", () => {
+                        it("Should withdraw funds", async () => {
+                            await expect(sportEventRegistry.withdraw(deployedEventAddress)).to.changeEtherBalance(
+                                superAdmin,
+                                ethers.utils.parseEther("0.02")
+                            );
+
+                            await expect(
+                                sportEventRegistry.connect(organizer).withdraw(deployedEventAddress)
+                            ).to.changeEtherBalance(organizer, ethers.utils.parseEther("0.18"));
+                        });
+
+                        it("Should revert if account has no funds", async () => {
+                            await expect(
+                                sportEventRegistry.connect(user1).withdraw(deployedEventAddress)
+                            ).to.be.revertedWith("There is no funds.");
+                        });
+                    });
                 });
             });
         });
