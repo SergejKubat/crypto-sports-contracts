@@ -8,8 +8,6 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "./interfaces/ISportEventFactory.sol";
 import "./interfaces/ISportEvent.sol";
 
-// import "hardhat/console.sol";
-
 contract SportEventRegistry is AccessControl, ReentrancyGuard {
     // TYPE DECLARATIONS
 
@@ -74,6 +72,13 @@ contract SportEventRegistry is AccessControl, ReentrancyGuard {
     // emits when earnings are withdrew
     event EarningsWithdrew(address sportEventAddress, address to, uint256 amount);
 
+    // MODIFIERS
+
+    modifier onlyCreator() {
+        require(hasRole(SPORT_EVENT_CREATOR_ROLE, msg.sender), "Caller is not authorized.");
+        _;
+    }
+
     // FUNCTIONS
 
     // constructor
@@ -104,7 +109,13 @@ contract SportEventRegistry is AccessControl, ReentrancyGuard {
         view
         returns (uint256[] memory)
     {
-        return _getAmounts(sportEventAddress, ticketTypes);
+        uint256[] memory amounts = new uint256[](ticketTypes.length);
+
+        for (uint8 i = 0; i < ticketTypes.length; i++) {
+            amounts[i] = _amounts[sportEventAddress][ticketTypes[i]];
+        }
+
+        return amounts;
     }
 
     // get price of available tickets for specific ticket type
@@ -118,7 +129,13 @@ contract SportEventRegistry is AccessControl, ReentrancyGuard {
         view
         returns (uint256[] memory)
     {
-        return _getPrices(sportEventAddress, ticketTypes);
+        uint256[] memory prices = new uint256[](ticketTypes.length);
+
+        for (uint8 i = 0; i < ticketTypes.length; i++) {
+            prices[i] = _prices[sportEventAddress][ticketTypes[i]];
+        }
+
+        return prices;
     }
 
     function getBalance(address sportEventAddress) external view returns (uint256) {
@@ -149,8 +166,7 @@ contract SportEventRegistry is AccessControl, ReentrancyGuard {
         uint256[] memory prices,
         address organizerAddress,
         uint32 endTimestamp
-    ) external {
-        require(hasRole(SPORT_EVENT_CREATOR_ROLE, msg.sender), "Caller isn't authorized to create new event.");
+    ) external onlyCreator {
         require(amounts.length == prices.length, "Prices and amounts must be same size.");
 
         // determine supported ticket types
@@ -194,8 +210,7 @@ contract SportEventRegistry is AccessControl, ReentrancyGuard {
     }
 
     // pause sport event
-    function pauseEvent(address sportEventAddress) external {
-        require(hasRole(SPORT_EVENT_CREATOR_ROLE, msg.sender), "Caller isn't authorized to pause an event.");
+    function pauseEvent(address sportEventAddress) external onlyCreator {
         require(_events[sportEventAddress].sportEventAddress != address(0), "Event doesn't exist.");
         require(_events[sportEventAddress].active != false, "Event is already paused.");
 
@@ -209,8 +224,7 @@ contract SportEventRegistry is AccessControl, ReentrancyGuard {
     }
 
     // unpause sport event
-    function unpauseEvent(address sportEventAddress) external {
-        require(hasRole(SPORT_EVENT_CREATOR_ROLE, msg.sender), "Caller isn't authorized to pause an event.");
+    function unpauseEvent(address sportEventAddress) external onlyCreator {
         require(_events[sportEventAddress].sportEventAddress != address(0), "Event doesn't exist.");
         require(_events[sportEventAddress].active != true, "Event is already active.");
 
@@ -270,37 +284,5 @@ contract SportEventRegistry is AccessControl, ReentrancyGuard {
         _purchases[msg.sender][sportEventAddress] = _purchases[msg.sender][sportEventAddress] + ticketTypes.length;
 
         emit TicketsSold(sportEventAddress, msg.sender, ticketTypes, startId);
-    }
-
-    // internal
-
-    // get all amounts of available tickets fot all ticket types
-    function _getAmounts(address sportEventAddress, uint256[] memory ticketTypes)
-        internal
-        view
-        returns (uint256[] memory)
-    {
-        uint256[] memory amounts = new uint256[](ticketTypes.length);
-
-        for (uint256 i = 0; i < ticketTypes.length; i++) {
-            amounts[i] = _amounts[sportEventAddress][ticketTypes[i]];
-        }
-
-        return amounts;
-    }
-
-    // get all prices amounts of available tickets fot all ticket types
-    function _getPrices(address sportEventAddress, uint256[] memory ticketTypes)
-        internal
-        view
-        returns (uint256[] memory)
-    {
-        uint256[] memory prices = new uint256[](ticketTypes.length);
-
-        for (uint256 i = 0; i < ticketTypes.length; i++) {
-            prices[i] = _prices[sportEventAddress][ticketTypes[i]];
-        }
-
-        return prices;
     }
 }

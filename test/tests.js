@@ -151,7 +151,7 @@ describe("Setup contracts", () => {
                         sportEventRegistry
                             .connect(user1)
                             .createSportEvent(baseURI, name, symbol, amounts, prices, organizer.address, endTimestamp)
-                    ).to.be.revertedWith("Caller isn't authorized to create new event.");
+                    ).to.be.revertedWith("Caller is not authorized.");
                 });
 
                 it("Should revert if amounts and prices aren't the same size", async () => {
@@ -178,7 +178,7 @@ describe("Setup contracts", () => {
 
                 it("Should revert if account hasn't appropriate role", async () => {
                     await expect(sportEventRegistry.connect(user1).pauseEvent(deployedEventAddress)).to.be.revertedWith(
-                        "Caller isn't authorized to pause an event."
+                        "Caller is not authorized."
                     );
                 });
 
@@ -209,7 +209,7 @@ describe("Setup contracts", () => {
                 it("Should revert if account hasn't appropriate role", async () => {
                     await expect(
                         sportEventRegistry.connect(user1).unpauseEvent(deployedEventAddress)
-                    ).to.be.revertedWith("Caller isn't authorized to pause an event.");
+                    ).to.be.revertedWith("Caller is not authorized.");
                 });
 
                 it("Should revert if event doesn't exist", async () => {
