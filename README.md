@@ -1,13 +1,27 @@
-# Sample Hardhat Project
+# Crypto Sports - Contracts
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a script that deploys that contract.
+Smart contracts for 'Crypto Sports'.
 
-Try running some of the following tasks:
+Compile contracts:
 
 ```shell
-npx hardhat help
-npx hardhat test
-REPORT_GAS=true npx hardhat test
-npx hardhat node
-npx hardhat run scripts/deploy.js
+yarn hardhat compile
+```
+
+Run unit tests:
+
+```shell
+yarn hardhat test
+```
+
+Run local node:
+
+```shell
+yarn hardhat node
+```
+
+Deploy script:
+
+```shell
+yarn hardhat run scripts/deploy.js
 ```
