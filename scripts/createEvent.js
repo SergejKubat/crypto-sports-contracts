@@ -41,8 +41,6 @@ async function main() {
         endTimestamp
     );
 
-    console.log("posao");
-
     const transactionReceipt = await transactionResponse.wait();
 
     console.log(transactionReceipt);
