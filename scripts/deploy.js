@@ -1,3 +1,4 @@
+const fs = require("fs");
 const { ethers } = require("hardhat");
 
 async function main() {
@@ -21,6 +22,14 @@ async function main() {
 
     console.log(`SportEventFactory contract deployed to: ${sportEventFactoryAddress}\n`);
 
+    const factoryData = {
+        address: sportEventFactoryAddress,
+        abi: JSON.parse(sportEventFactory.interface.format("json")),
+    };
+
+    // save SportEventFactory ABI
+    fs.writeFileSync("abi/SportEventFactory.json", JSON.stringify(factoryData));
+
     console.log("####################################################\n");
 
     // deploying registry
@@ -35,6 +44,14 @@ async function main() {
     const sportEventRegistryAddress = sportEventRegistry.address;
 
     console.log(`SportEventRegistry contract deployed to: ${sportEventRegistryAddress}\n`);
+
+    const registryData = {
+        address: sportEventRegistryAddress,
+        abi: JSON.parse(sportEventRegistry.interface.format("json")),
+    };
+
+    // save SportEventRegistry ABI
+    fs.writeFileSync("abi/SportEventRegistry.json", JSON.stringify(registryData));
 
     // grant role for registry
     const SPORT_EVENT_CREATOR_ROLE = await sportEventFactory.SPORT_EVENT_CREATOR_ROLE();
