@@ -4,14 +4,7 @@ const { expect } = require("chai");
 const { anyValue } = require("@nomicfoundation/hardhat-chai-matchers/withArgs");
 
 describe("Setup contracts", () => {
-    let SportEventFactory,
-        sportEventFactory,
-        SportEventRegistry,
-        sportEventRegistry,
-        superAdmin,
-        admin,
-        organizer,
-        user1;
+    let SportEventFactory, sportEventFactory, SportEventRegistry, sportEventRegistry, superAdmin, admin, organizer, user1;
 
     beforeEach(async () => {
         // deploying factory
@@ -53,9 +46,7 @@ describe("Setup contracts", () => {
             it("Should grant the right role to registry contract", async () => {
                 const SPORT_EVENT_CREATOR_ROLE = await sportEventFactory.SPORT_EVENT_CREATOR_ROLE();
 
-                expect(await sportEventFactory.hasRole(SPORT_EVENT_CREATOR_ROLE, sportEventRegistry.address)).to.equal(
-                    true
-                );
+                expect(await sportEventFactory.hasRole(SPORT_EVENT_CREATOR_ROLE, sportEventRegistry.address)).to.equal(true);
             });
         });
     });
@@ -99,7 +90,7 @@ describe("Setup contracts", () => {
                 ethers.utils.parseEther("0.05"),
                 ethers.utils.parseEther("0.1"),
                 ethers.utils.parseEther("0.25"),
-                ethers.utils.parseEther("0.5"),
+                ethers.utils.parseEther("0.5")
             ];
 
             // get future timestamp
@@ -132,15 +123,7 @@ describe("Setup contracts", () => {
             describe("Create new Sport Event", () => {
                 it("Should emit SportEventCreated event with right parameters", async () => {
                     await expect(
-                        sportEventRegistry.createSportEvent(
-                            baseURI,
-                            name,
-                            symbol,
-                            amounts,
-                            prices,
-                            organizer.address,
-                            endTimestamp
-                        )
+                        sportEventRegistry.createSportEvent(baseURI, name, symbol, amounts, prices, organizer.address, endTimestamp)
                     )
                         .to.emit(sportEventRegistry, "SportEventCreated")
                         .withArgs(anyValue, superAdmin.address, baseURI, name, endTimestamp);
@@ -156,15 +139,7 @@ describe("Setup contracts", () => {
 
                 it("Should revert if amounts and prices aren't the same size", async () => {
                     await expect(
-                        sportEventRegistry.createSportEvent(
-                            baseURI,
-                            name,
-                            symbol,
-                            [100, 50, 25],
-                            prices,
-                            organizer.address,
-                            endTimestamp
-                        )
+                        sportEventRegistry.createSportEvent(baseURI, name, symbol, [100, 50, 25], prices, organizer.address, endTimestamp)
                     ).to.be.revertedWith("Prices and amounts must be same size.");
                 });
             });
@@ -183,17 +158,15 @@ describe("Setup contracts", () => {
                 });
 
                 it("Should revert if event doesn't exist", async () => {
-                    await expect(
-                        sportEventRegistry.pauseEvent("0xb794f5ea0ba39494ce839613fffba74279579268")
-                    ).to.be.revertedWith("Event doesn't exist.");
+                    await expect(sportEventRegistry.pauseEvent("0xb794f5ea0ba39494ce839613fffba74279579268")).to.be.revertedWith(
+                        "Event doesn't exist."
+                    );
                 });
 
                 it("Should revert if event is already paused", async () => {
                     await sportEventRegistry.pauseEvent(deployedEventAddress);
 
-                    await expect(sportEventRegistry.pauseEvent(deployedEventAddress)).to.be.revertedWith(
-                        "Event is already paused."
-                    );
+                    await expect(sportEventRegistry.pauseEvent(deployedEventAddress)).to.be.revertedWith("Event is already paused.");
                 });
             });
 
@@ -207,21 +180,19 @@ describe("Setup contracts", () => {
                 });
 
                 it("Should revert if account hasn't appropriate role", async () => {
-                    await expect(
-                        sportEventRegistry.connect(user1).unpauseEvent(deployedEventAddress)
-                    ).to.be.revertedWith("Caller is not authorized.");
+                    await expect(sportEventRegistry.connect(user1).unpauseEvent(deployedEventAddress)).to.be.revertedWith(
+                        "Caller is not authorized."
+                    );
                 });
 
                 it("Should revert if event doesn't exist", async () => {
-                    await expect(
-                        sportEventRegistry.unpauseEvent("0xb794f5ea0ba39494ce839613fffba74279579268")
-                    ).to.be.revertedWith("Event doesn't exist.");
+                    await expect(sportEventRegistry.unpauseEvent("0xb794f5ea0ba39494ce839613fffba74279579268")).to.be.revertedWith(
+                        "Event doesn't exist."
+                    );
                 });
 
                 it("Should revert if event is already active", async () => {
-                    await expect(sportEventRegistry.unpauseEvent(deployedEventAddress)).to.be.revertedWith(
-                        "Event is already active."
-                    );
+                    await expect(sportEventRegistry.unpauseEvent(deployedEventAddress)).to.be.revertedWith("Event is already active.");
                 });
             });
 
@@ -248,7 +219,7 @@ describe("Setup contracts", () => {
                 it("Should emit TicketsSold event", async () => {
                     await expect(
                         sportEventRegistry.connect(user1).buyTickets(deployedEventAddress, TICKET_TYPES, {
-                            value: ethers.utils.parseEther(TOTAL_PRICE_ETH),
+                            value: ethers.utils.parseEther(TOTAL_PRICE_ETH)
                         })
                     ).to.be.emit(sportEventRegistry, "TicketsSold");
                 });
@@ -256,32 +227,30 @@ describe("Setup contracts", () => {
                 it("Should decrease account balance", async () => {
                     await expect(
                         sportEventRegistry.connect(user1).buyTickets(deployedEventAddress, TICKET_TYPES, {
-                            value: ethers.utils.parseEther(TOTAL_PRICE_ETH),
+                            value: ethers.utils.parseEther(TOTAL_PRICE_ETH)
                         })
                     ).to.changeEtherBalance(user1, ethers.utils.parseEther("-0.2"));
 
                     // also if the amount is exceeded
                     await expect(
                         sportEventRegistry.connect(user1).buyTickets(deployedEventAddress, TICKET_TYPES, {
-                            value: ethers.utils.parseEther("0.3"),
+                            value: ethers.utils.parseEther("0.3")
                         })
                     ).to.changeEtherBalance(user1, ethers.utils.parseEther("-0.2"));
                 });
 
                 it("Should revert if event doesn't exist", async () => {
                     await expect(
-                        sportEventRegistry
-                            .connect(user1)
-                            .buyTickets("0xb794f5ea0ba39494ce839613fffba74279579268", TICKET_TYPES, {
-                                value: ethers.utils.parseEther(TOTAL_PRICE_ETH),
-                            })
+                        sportEventRegistry.connect(user1).buyTickets("0xb794f5ea0ba39494ce839613fffba74279579268", TICKET_TYPES, {
+                            value: ethers.utils.parseEther(TOTAL_PRICE_ETH)
+                        })
                     ).to.be.revertedWith("Event doesn't exist.");
                 });
 
                 it("Should revert if ticket types are 0", async () => {
                     await expect(
                         sportEventRegistry.connect(user1).buyTickets(deployedEventAddress, [], {
-                            value: ethers.utils.parseEther(TOTAL_PRICE_ETH),
+                            value: ethers.utils.parseEther(TOTAL_PRICE_ETH)
                         })
                     ).to.be.revertedWith("Ticket types cannot be 0.");
                 });
@@ -300,7 +269,7 @@ describe("Setup contracts", () => {
                 it("Should revert if insufficient funds", async () => {
                     await expect(
                         sportEventRegistry.connect(user1).buyTickets(deployedEventAddress, TICKET_TYPES, {
-                            value: ethers.utils.parseEther("0.1"),
+                            value: ethers.utils.parseEther("0.1")
                         })
                     ).to.be.revertedWith("Insufficient funds.");
                 });
@@ -308,7 +277,7 @@ describe("Setup contracts", () => {
                 describe("After the tickets have been purchased", () => {
                     beforeEach(async () => {
                         await sportEventRegistry.connect(user1).buyTickets(deployedEventAddress, TICKET_TYPES, {
-                            value: ethers.utils.parseEther(TOTAL_PRICE_ETH),
+                            value: ethers.utils.parseEther(TOTAL_PRICE_ETH)
                         });
                     });
 
@@ -318,15 +287,11 @@ describe("Setup contracts", () => {
                     });
 
                     it("Should set the correct count of purchased tickets for account", async () => {
-                        expect(await sportEventRegistry.getPurchases(user1.address, deployedEventAddress)).to.equal(
-                            TICKET_TYPES.length
-                        );
+                        expect(await sportEventRegistry.getPurchases(user1.address, deployedEventAddress)).to.equal(TICKET_TYPES.length);
                     });
 
                     it("Should set the right balances", async () => {
-                        expect(await sportEventRegistry.getBalance(deployedEventAddress)).to.equal(
-                            ethers.utils.parseEther("0.02")
-                        );
+                        expect(await sportEventRegistry.getBalance(deployedEventAddress)).to.equal(ethers.utils.parseEther("0.02"));
                         expect(await sportEventRegistry.connect(organizer).getBalance(deployedEventAddress)).to.equal(
                             ethers.utils.parseEther("0.18")
                         );
@@ -339,15 +304,16 @@ describe("Setup contracts", () => {
                                 ethers.utils.parseEther("0.02")
                             );
 
-                            await expect(
-                                sportEventRegistry.connect(organizer).withdraw(deployedEventAddress)
-                            ).to.changeEtherBalance(organizer, ethers.utils.parseEther("0.18"));
+                            await expect(sportEventRegistry.connect(organizer).withdraw(deployedEventAddress)).to.changeEtherBalance(
+                                organizer,
+                                ethers.utils.parseEther("0.18")
+                            );
                         });
 
                         it("Should revert if account has no funds", async () => {
-                            await expect(
-                                sportEventRegistry.connect(user1).withdraw(deployedEventAddress)
-                            ).to.be.revertedWith("There is no funds.");
+                            await expect(sportEventRegistry.connect(user1).withdraw(deployedEventAddress)).to.be.revertedWith(
+                                "There is no funds."
+                            );
                         });
                     });
                 });

@@ -4,11 +4,7 @@ const { ethers } = require("hardhat");
 async function main() {
     const [owner, organizer] = await ethers.getSigners();
 
-    const sportEventRegistry = await ethers.getContractAt(
-        "SportEventRegistry",
-        "0xe7f1725e7734ce288f8367e1bb143e90bb3f0512",
-        owner
-    );
+    const sportEventRegistry = await ethers.getContractAt("SportEventRegistry", "0xe7f1725e7734ce288f8367e1bb143e90bb3f0512", owner);
 
     // parameters for new sport event
     const baseURI = "https://www.google.com/";
@@ -19,7 +15,7 @@ async function main() {
         ethers.utils.parseEther("0.05"),
         ethers.utils.parseEther("0.1"),
         ethers.utils.parseEther("0.25"),
-        ethers.utils.parseEther("0.5"),
+        ethers.utils.parseEther("0.5")
     ];
 
     // get future timestamp
@@ -47,7 +43,7 @@ async function main() {
         sportEventAddress: eventArgs.sportEventAddress,
         creator: eventArgs.creator,
         baseURI: eventArgs.baseURI,
-        name: eventArgs.name,
+        name: eventArgs.name
     };
 
     fs.writeFileSync("data/lastCreatedEvent.json", JSON.stringify(createdEventData));

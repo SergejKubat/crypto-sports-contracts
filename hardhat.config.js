@@ -14,21 +14,21 @@ module.exports = {
     networks: {
         ganache: {
             url: GANACHE_RPC_URL,
-            accounts: [SUPER_ADMIN_PRIVATE_KEY, ADMIN_PRIVATE_KEY, USER1_PRIVATE_KEY, USER2_PRIVATE_KEY],
-        },
+            accounts: [SUPER_ADMIN_PRIVATE_KEY, ADMIN_PRIVATE_KEY, USER1_PRIVATE_KEY, USER2_PRIVATE_KEY]
+        }
     },
     gasReporter: {
         enabled: true,
         outputFile: "gas-report.txt",
-        noColors: true,
+        noColors: true
     },
     solidity: {
         version: "0.8.9",
         settings: {
             optimizer: {
                 enabled: true,
-                runs: 200,
-            },
-        },
-    },
+                runs: 200
+            }
+        }
+    }
 };
