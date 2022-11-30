@@ -1,10 +1,12 @@
 const fs = require("fs");
 const { ethers } = require("hardhat");
 
+const SportEventRegistry = require("../abi/SportEventRegistry.json");
+
 async function main() {
     const [owner, organizer] = await ethers.getSigners();
 
-    const sportEventRegistry = await ethers.getContractAt("SportEventRegistry", "0xe7f1725e7734ce288f8367e1bb143e90bb3f0512", owner);
+    const sportEventRegistry = await ethers.getContractAt("SportEventRegistry", SportEventRegistry.address, owner);
 
     // parameters for new sport event
     const baseURI = "https://www.google.com/";
