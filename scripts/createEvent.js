@@ -1,16 +1,14 @@
-const { Contract } = require("ethers");
+const fs = require("fs");
 const { ethers } = require("hardhat");
 
-const SportEventRegistry = require("../abi/SportEventRegistry.json");
-
 async function main() {
-    const accounts = await ethers.getSigners();
+    const [owner, organizer] = await ethers.getSigners();
 
-    const superAdmin = accounts[0];
-
-    const sportEventRegistry = new Contract(SportEventRegistry.address, SportEventRegistry.abi);
-
-    const sportEventRegistryWithSigner = sportEventRegistry.connect(superAdmin);
+    const sportEventRegistry = await ethers.getContractAt(
+        "SportEventRegistry",
+        "0xe7f1725e7734ce288f8367e1bb143e90bb3f0512",
+        owner
+    );
 
     // parameters for new sport event
     const baseURI = "https://www.google.com/";
@@ -31,19 +29,28 @@ async function main() {
 
     const endTimestamp = Math.floor(futureDate.getTime() / 1000);
 
-    const transactionResponse = await sportEventRegistryWithSigner.createSportEvent(
+    const transactionResponse = await sportEventRegistry.createSportEvent(
         baseURI,
         name,
         symbol,
         amounts,
         prices,
-        accounts[3].address,
+        organizer.address,
         endTimestamp
     );
 
     const transactionReceipt = await transactionResponse.wait();
 
-    console.log(transactionReceipt);
+    const eventArgs = transactionReceipt.events[transactionReceipt.events.length - 1].args;
+
+    const createdEventData = {
+        sportEventAddress: eventArgs.sportEventAddress,
+        creator: eventArgs.creator,
+        baseURI: eventArgs.baseURI,
+        name: eventArgs.name,
+    };
+
+    fs.writeFileSync("data/lastCreatedEvent.json", JSON.stringify(createdEventData));
 }
 
 main()

@@ -1,4 +1,6 @@
 node_modules
+data
+abi
 .env
 coverage
 coverage.json

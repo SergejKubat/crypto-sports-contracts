@@ -22,13 +22,13 @@ async function main() {
 
     console.log(`SportEventFactory contract deployed to: ${sportEventFactoryAddress}\n`);
 
-    const factoryData = {
+    /*const factoryData = {
         address: sportEventFactoryAddress,
         abi: JSON.parse(sportEventFactory.interface.format("json")),
     };
 
     // save SportEventFactory ABI
-    fs.writeFileSync("abi/SportEventFactory.json", JSON.stringify(factoryData));
+    fs.writeFileSync("abi/SportEventFactory.json", JSON.stringify(factoryData));*/
 
     console.log("####################################################\n");
 
@@ -45,18 +45,18 @@ async function main() {
 
     console.log(`SportEventRegistry contract deployed to: ${sportEventRegistryAddress}\n`);
 
-    const registryData = {
+    /*const registryData = {
         address: sportEventRegistryAddress,
         abi: JSON.parse(sportEventRegistry.interface.format("json")),
     };
 
     // save SportEventRegistry ABI
-    fs.writeFileSync("abi/SportEventRegistry.json", JSON.stringify(registryData));
+    fs.writeFileSync("abi/SportEventRegistry.json", JSON.stringify(registryData));*/
 
     // grant role for registry
     const SPORT_EVENT_CREATOR_ROLE = await sportEventFactory.SPORT_EVENT_CREATOR_ROLE();
 
-    await sportEventFactory.grantRole(SPORT_EVENT_CREATOR_ROLE, sportEventFactoryAddress);
+    await sportEventFactory.grantRole(SPORT_EVENT_CREATOR_ROLE, sportEventRegistryAddress);
 
     console.log("Role granted!");
 }
