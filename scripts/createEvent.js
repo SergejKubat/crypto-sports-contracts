@@ -10,7 +10,7 @@ async function main() {
 
     // parameters for new sport event
     const baseURI = "https://www.google.com/";
-    const name = "Test Event 123";
+    const name = "New test event";
     const symbol = "CryptoSports";
     const amounts = [100, 50, 25, 5];
     const prices = [

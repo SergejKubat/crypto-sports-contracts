@@ -20,8 +20,6 @@ async function main() {
     const transactionReceipt = await transactionResponse.wait();
 
     const eventArgs = transactionReceipt.events[transactionReceipt.events.length - 1].args;
-
-    console.log(eventArgs);
 }
 
 main()

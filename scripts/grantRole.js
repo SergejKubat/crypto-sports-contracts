@@ -12,8 +12,6 @@ async function main() {
     const transactionResponse = await sportEventRegistry.grantRole(SPORT_EVENT_CREATOR_ROLE, admin.address);
 
     const transactionReceipt = await transactionResponse.wait();
-
-    console.log(transactionReceipt);
 }
 
 main()
