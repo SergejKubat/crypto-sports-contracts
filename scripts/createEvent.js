@@ -10,20 +10,15 @@ async function main() {
 
     // parameters for new sport event
     const baseURI = "https://www.google.com/";
-    const name = "New test event";
+    const name = "Lorem Ipsum Event";
     const symbol = "CryptoSports";
-    const amounts = [100, 50, 25, 5];
-    const prices = [
-        ethers.utils.parseEther("0.05"),
-        ethers.utils.parseEther("0.1"),
-        ethers.utils.parseEther("0.25"),
-        ethers.utils.parseEther("0.5")
-    ];
+    const amounts = [50, 25];
+    const prices = [ethers.utils.parseEther("0.0001"), ethers.utils.parseEther("0.0005")];
 
     // get future timestamp
     const futureDate = new Date();
 
-    futureDate.setHours(new Date().getHours() + 2);
+    futureDate.setHours(new Date().getHours() + 20);
 
     const endTimestamp = Math.floor(futureDate.getTime() / 1000);
 
